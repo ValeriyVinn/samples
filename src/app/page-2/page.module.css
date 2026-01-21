@@ -224,3 +224,59 @@
 .slideWrapper img {
   object-fit: contain;
 }
+
+
+
+/* ===== Spreadsheet ===== */
+
+/* ===== Excel-like table ===== */
+
+.excel {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* рамки тільки у клітинок */
+.excel th,
+.excel td {
+  border: 1px solid #cbd5e1;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* input = просто вміст клітинки */
+.excel input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.85rem;
+}
+
+/* фокус як в Excel */
+.excel td:focus-within {
+  background: #eef2ff;
+}
+
+/* заголовки */
+.excel thead th {
+  background: #e5e7eb;
+  font-weight: 700;
+}
+
+.excel tbody th {
+  background: #f3f4f6;
+  font-weight: 600;
+  width: 42px;
+}
+/* ширина стовпчика з номерами */
+.excel th:first-child {
+  width: 42px;
+}
+
+/* всі інші стовпчики (A–E) */
+.excel th:not(:first-child),
+.excel td:not(:first-child) {
+  width: calc((100% - 42px) / 5);
+}
