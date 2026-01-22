@@ -270,13 +270,42 @@
   font-weight: 600;
   width: 42px;
 }
-/* ширина стовпчика з номерами */
+
 .excel th:first-child {
   width: 42px;
 }
 
-/* всі інші стовпчики (A–E) */
 .excel th:not(:first-child),
 .excel td:not(:first-child) {
   width: calc((100% - 42px) / 5);
+}
+
+/* ===== Task 1 Excel ===== */
+
+.orange {
+  background: #f59e0b;
+  font-weight: 700;
+}
+
+.answerCell {
+  background: yellow;
+}
+
+.correctCell {
+  background: #22c55e;
+  color: #fff;
+  font-weight: 700;
+}
+
+.operator {
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.answerCell input,
+.correctCell input {
+  text-align: center;
+  font-weight: 700;
+  background: transparent;
 }

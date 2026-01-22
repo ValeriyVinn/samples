@@ -116,8 +116,46 @@ export default function Page2() {
 
   if (totalCorrect) tableScore += 2;
 
+  /* ===== Завдання 1. Арифметика в Excel ===== */
+
+  type ExcelTask = {
+    row: number;
+    a: number;
+    b: number;
+    op: string;
+  };
+
+  const excelTasks: ExcelTask[] = [
+    { row: 2, a: 15, b: 20, op: "+" },
+    { row: 4, a: 40, b: 15, op: "-" },
+    { row: 6, a: 6, b: 7, op: "*" },
+    { row: 8, a: 64, b: 8, op: "/" },
+    { row: 10, a: 20, b: 200, op: "%" },
+  ];
+
+  const correctFormulas = ["=B2+D2", "=B4-D4", "=B6*D6", "=B8/D8", "=B10*D10"];
+
+  const [answers1, setAnswers1] = useState<string[]>(
+    Array(correctFormulas.length).fill(""),
+  );
+
+  const [correct1, setCorrect1] = useState<boolean[]>(
+    Array(correctFormulas.length).fill(false),
+  );
+
+  const checkAnswer1 = (index: number) => {
+    const user = answers1[index].replace(/\s+/g, "");
+    const expected = correctFormulas[index];
+
+    const copy = [...correct1];
+    copy[index] = user === expected;
+    setCorrect1(copy);
+  };
+
+  const task1Score = correct1.filter(Boolean).length * 5;
+
   /* ===== Загальна оцінка ===== */
-  const totalScore = quizSum + theoryScore + tableScore;
+  const totalScore = quizSum + theoryScore + task1Score +tableScore;
 
   return (
     <div className={styles.container}>
@@ -189,6 +227,80 @@ export default function Page2() {
       </div>
 
       <div className={styles.sum}>Оцінка блоку: {theoryScore}</div>
+
+      <h2 className={styles.headerTwo}>Завдання 1</h2>
+      <div>
+        Напишіть формули для підрахункку математичних дій в жовті клітинки
+      </div>
+      <div className={styles.sheet}>
+        <table className={styles.excel}>
+          <thead>
+            <tr>
+              <th></th>
+              {["A", "B", "C", "D", "E", "F", "G"].map((c) => (
+                <th key={c}>{c}</th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {Array.from({ length: 11 }, (_, r) => {
+              const row = r + 1;
+              const taskIndex = excelTasks.findIndex((t) => t.row === row);
+              const task = excelTasks[taskIndex];
+
+              return (
+                <tr key={row}>
+                  <th>{row}</th>
+
+                  {/* A */}
+                  <td></td>
+
+                  {/* B */}
+                  <td className={task ? styles.orange : ""}>{task?.a ?? ""}</td>
+
+                  {/* C (оператор) */}
+                  <td className={styles.operator}>{task?.op ?? ""}</td>
+
+                  {/* D */}
+                  <td className={task ? styles.orange : ""}>{task?.b ?? ""}</td>
+
+                  {/* E (=) */}
+                  <td className={styles.operator}>{task ? "=" : ""}</td>
+
+                  {/* F (input з формулою) */}
+                  <td
+                    className={
+                      task
+                        ? correct1[taskIndex]
+                          ? styles.correctCell
+                          : styles.answerCell
+                        : ""
+                    }
+                  >
+                    {task && (
+                      <input
+                        value={answers1[taskIndex]}
+                        onChange={(e) => {
+                          const copy = [...answers1];
+                          copy[taskIndex] = e.target.value;
+                          setAnswers1(copy);
+                        }}
+                        onBlur={() => checkAnswer1(taskIndex)}
+                      />
+                    )}
+                  </td>
+
+                  {/* G */}
+                  <td></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className={styles.sum}>Оцінка блоку: {task1Score}</div>
 
       <h2 className={styles.headerTwo}>Завдання 2. Список покупок</h2>
       <div>Створіть таблицю за інструкцією</div>
