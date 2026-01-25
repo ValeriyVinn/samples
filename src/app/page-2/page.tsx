@@ -164,6 +164,7 @@ export default function Page2() {
       <h1 className={styles.headerOne}>Урок 26</h1>
 
       <h2 className={styles.headerTwo}>Морський бій</h2>
+      <div>Назвіть правильно адресу корабля - наприклад: A3, L10 (кораблі, розміром в 1 клітинку), наприклад: A1:D1 (кораблі розміром більше однієї клітинки)</div>
       <div className={styles.navalContainer}>
         <Image
           className={styles.navalImage}
