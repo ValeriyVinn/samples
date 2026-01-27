@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
 import styles from "./page.module.css";
 
 const answers = ["A7:A10", "B2", "D6", "D10:F10", "G4", "J1:J3", "J10"];
 
 const slides = Array.from(
-  { length: 10 },
+  { length: 2 },
   (_, i) => `/page-2/images/slide${i + 1}.jpg`,
 );
 
@@ -25,7 +25,7 @@ export default function Page2() {
     const newScores = [...scores];
 
     newChecked[index] = true;
-    newScores[index] = correct ? 1 : -1;
+    newScores[index] = correct ? 1 : 0;
 
     setChecked(newChecked);
     setScores(newScores);
@@ -34,17 +34,20 @@ export default function Page2() {
   const quizSum = scores.reduce((a, b) => a + b, 0);
 
   /* ===== Теорія (слайдер) ===== */
+
   const [slideIndex, setSlideIndex] = useState(0);
-  const [clicks, setClicks] = useState(0);
   const [theoryScore, setTheoryScore] = useState(0);
-  const lastClickTime = useRef<number>(0);
+
+  const slideStartTime = useRef<number>(Date.now());
+  const readSlides = useRef<Set<number>>(new Set());
 
   const changeSlide = (dir: number) => {
     const now = Date.now();
+    const timeSpent = now - slideStartTime.current;
 
-    if (now - lastClickTime.current >= 5000) {
-      lastClickTime.current = now;
-      setClicks((c) => c + 1);
+    // якщо на слайді були ≥ 5 секунд — зараховуємо
+    if (timeSpent >= 5000) {
+      readSlides.current.add(slideIndex);
     }
 
     setSlideIndex((prev) => {
@@ -52,16 +55,30 @@ export default function Page2() {
       if (next < 0 || next >= slides.length) return prev;
       return next;
     });
+
+    // старт часу для нового слайду
+    slideStartTime.current = now;
   };
 
-  if (clicks > 5 && theoryScore === 0) {
-    setTheoryScore(1);
-  }
+  useEffect(() => {
+    if (slideIndex === 1) {
+      const timer = setTimeout(() => {
+        readSlides.current.add(1);
+
+        if (readSlides.current.size === 2 && theoryScore === 0) {
+          setTheoryScore(1);
+        }
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [slideIndex, theoryScore]);
+
   /* ===== Електронна таблиця ===== */
 
   const [shopName, setShopName] = useState("");
 
-  const [products, setProducts] = useState(
+  const [] = useState(
     Array.from({ length: 5 }, () => ({
       name: "",
       price: "",
@@ -71,50 +88,8 @@ export default function Page2() {
     })),
   );
 
-  const [totalFormula, setTotalFormula] = useState("");
-  const [totalCorrect, setTotalCorrect] = useState(false);
-
-  const checkProductFormula = (index: number) => {
-    const row = products[index];
-    const expected = `=B${index + 3}*C${index + 3}`;
-
-    const updated = [...products];
-    updated[index].correct = row.formula.replace(/\s/g, "") === expected;
-    setProducts(updated);
-  };
-
-  const checkTotalFormula = () => {
-    const filledRows = products
-      .map((p, i) => (p.name && p.price && p.qty ? `D${i + 3}` : null))
-      .filter(Boolean);
-
-    if (filledRows.length === 0) {
-      setTotalCorrect(false);
-      return;
-    }
-
-    const expected = "=" + filledRows.join("+");
-
-    setTotalCorrect(totalFormula.replace(/\s/g, "") === expected);
-  };
-
-  const filledProducts = products.filter(
-    (p) => p.name && p.price && p.qty,
-  ).length;
-
-  let tableScore = 0;
-
-  if (shopName.trim()) tableScore += 1;
-
-  if (filledProducts >= 1 && filledProducts <= 2) tableScore += 2;
-  if (filledProducts === 3) tableScore += 3;
-  if (filledProducts > 3) tableScore += 4;
-
-  products.forEach((p) => {
-    if (p.correct) tableScore += 2;
-  });
-
-  if (totalCorrect) tableScore += 2;
+  const [totalFormulaText, setTotalFormulaText] = useState("");
+  const [] = useState(false);
 
   /* ===== Завдання 1. Арифметика в Excel ===== */
 
@@ -154,17 +129,64 @@ export default function Page2() {
 
   const task1Score = correct1.filter(Boolean).length * 5;
 
+  // самооцінка за завдання 1
+  const [] = useState(false);
+  const [productsInfo, setProductsInfo] = useState<"a" | "b" | "c" | null>(
+    null,
+  );
+  const [formulaD2Correct, setFormulaD2Correct] = useState(false);
+  const [formulaD2Wrong, setFormulaD2Wrong] = useState(false);
+  const [otherFormulas, setOtherFormulas] = useState(false);
+  const [] = useState(false);
+
+  const tableScore = useMemo(() => {
+    let score = 0;
+
+    if (shopName) score += 1;
+
+    if (productsInfo === "a") score += 2;
+    if (productsInfo === "b") score += 3;
+    if (productsInfo === "c") score += 4;
+
+    if (formulaD2Correct) score += 2;
+    if (formulaD2Wrong) score += 1;
+
+    if (otherFormulas) score += 2;
+    if (totalFormulaText) score += 2;
+
+    return score;
+  }, [
+    shopName,
+    productsInfo,
+    formulaD2Correct,
+    formulaD2Wrong,
+    otherFormulas,
+    totalFormulaText,
+  ]);
+  // !----------------------------------------------------
   /* ===== Загальна оцінка ===== */
-  const totalScore = quizSum + theoryScore + task1Score +tableScore;
+  const totalScore = quizSum + theoryScore + task1Score + tableScore;
 
   return (
     <div className={styles.container}>
       <div className={styles.total}>Загальна оцінка: {totalScore}</div>
 
       <h1 className={styles.headerOne}>Урок 26</h1>
+      <h2 className={styles.headerTwo}>
+        Ви навчитеся створювати таблиці з автоматизованими обрахунками
+      </h2>
+      <ol>
+        <li>Створите власну версію електроного електроного калькулятора </li>
+        <li>Складете розумний електронй чек магазину</li>
+      </ol>
 
       <h2 className={styles.headerTwo}>Морський бій</h2>
-      <div>Назвіть правильно адресу корабля - наприклад: A3, L10 (кораблі, розміром в 1 клітинку), наприклад: A1:D1 (кораблі розміром більше однієї клітинки)</div>
+      <div>
+        Назвіть правильно адресу корабля - наприклад: кораблі, розміром
+        в 1 клітинку: A3 , а кораблі розміром більше однієї
+        клітинки - наприклад: A1:D1 
+      </div>
+
       <div className={styles.navalContainer}>
         <Image
           className={styles.navalImage}
@@ -180,7 +202,7 @@ export default function Page2() {
               checked[i] && inputs[i].trim().toUpperCase() === answer;
 
             return (
-              <div key={i} className={styles.row}>
+              <div key={i} className={styles.quizRow}>
                 <div>{i + 1}</div>
 
                 <input
@@ -216,6 +238,10 @@ export default function Page2() {
       <div className={styles.sum}>Оцінка блоку: {quizSum}</div>
 
       <h2 className={styles.headerTwo}>Теорія</h2>
+      <p>
+        Прочитайте слайди, після ознайомлення з першим, пролистайте і прочитайте
+        другий{" "}
+      </p>
 
       <div className={styles.slider}>
         <button onClick={() => changeSlide(-1)}>◀</button>
@@ -304,7 +330,11 @@ export default function Page2() {
       <div className={styles.sum}>Оцінка блоку: {task1Score}</div>
 
       <h2 className={styles.headerTwo}>Завдання 2. Список покупок</h2>
-      <div>Створіть таблицю за інструкцією</div>
+      <div>
+        Створіть за інструкцією таблицю в Excel, приєднайте файл та САМООЦІНІТЬ
+        себе за пунктами (за це нарахуються інфобакси)
+      </div>
+
       <ol>
         <li>У таблиці введіть назву магазину.</li>
         <li>
@@ -317,126 +347,144 @@ export default function Page2() {
           вартості товару одного виду.
         </li>
         <li>
-          За зразком складіть формули для інших видів товарів у вашій таблиці. У
-          клітинці D13 напишіть формулу, яка обчислить автоматично повну суму,
+          За зразком складіть формули для інших видів товарів у вашій таблиці.
+        </li>
+        <li>
+          У клітинці D13 напишіть формулу, яка обчислить автоматично повну суму,
           яку ви повинні заплатити за товар.
         </li>
       </ol>
 
-      <h3 className={styles.headerTwo}>Електронна таблиця</h3>
+      
 
-      <div className={styles.sheet}>
-        <table className={styles.excel}>
-          <thead>
-            <tr>
-              <th></th>
-              <th>A</th>
-              <th>B</th>
-              <th>C</th>
-              <th>D</th>
-              <th>E</th>
-            </tr>
-          </thead>
+      <Image
+        className={styles.navalImage}
+        src="/page-2/images/exercise-two.png"
+        alt="Список покупок"
+        width={500}
+        height={500}
+      />
+      <div>
+<div>Поставте відмітки в полях зправа якщо</div>
 
-          <tbody>
-            {/* ===== Row 1 ===== */}
-            <tr>
-              <th>1</th>
-              <td colSpan={2}>Назва магазину</td>
-              <td colSpan={2}>
-                <input
-                  value={shopName}
-                  onChange={(e) => setShopName(e.target.value)}
-                />
-              </td>
-              <td></td>
-            </tr>
+        {/* 1 */}
+        <div className={styles.checkRow}>
+          <div className={styles.left}>1) Є назва магазину</div>
+          <div className={styles.right}>
+            <input
+              type="checkbox"
+              checked={!!shopName}
+              onChange={(e) => setShopName(e.target.checked ? "shop" : "")}
+            />
+            {shopName && <span className={styles.score}>1</span>}
+          </div>
+        </div>
 
-            {/* ===== Row 2 ===== */}
-            <tr>
-              <th>2</th>
-              <td>Назва товару</td>
-              <td>Ціна за 1 шт, грн</td>
-              <td>Кількість</td>
-              <td>Формула</td>
-              <td></td>
-            </tr>
+        {/* 2 */}
+        <div className={styles.checkRow}>
+          <div className={styles.left}>
+            2) Інформація про товари:
+            <div className={styles.sub}>а) Менше трьох товарів</div>
+            <div className={styles.sub}>б) Три товари</div>
+            <div className={styles.sub}>в) Більше 3 товарів</div>
+          </div>
 
-            {/* ===== Rows 3–7 ===== */}
-            {products.map((p, i) => (
-              <tr key={i}>
-                <th>{i + 3}</th>
+          <div className={styles.rightColumn}>
+            <label>
+              <input
+                type="radio"
+                name="products"
+                onChange={() => setProductsInfo("a")}
+              />
+              {productsInfo === "a" && <span className={styles.score}>2</span>}
+            </label>
 
-                <td>
-                  <input
-                    placeholder={i === 0 ? "Ручка кулькова, чорна" : ""}
-                    value={p.name}
-                    onChange={(e) => {
-                      const copy = [...products];
-                      copy[i].name = e.target.value;
-                      setProducts(copy);
-                    }}
-                  />
-                </td>
+            <label>
+              <input
+                type="radio"
+                name="products"
+                onChange={() => setProductsInfo("b")}
+              />
+              {productsInfo === "b" && <span className={styles.score}>3</span>}
+            </label>
 
-                <td>
-                  <input
-                    value={p.price}
-                    onChange={(e) => {
-                      const copy = [...products];
-                      copy[i].price = e.target.value;
-                      setProducts(copy);
-                    }}
-                  />
-                </td>
+            <label>
+              <input
+                type="radio"
+                name="products"
+                onChange={() => setProductsInfo("c")}
+              />
+              {productsInfo === "c" && <span className={styles.score}>4</span>}
+            </label>
+          </div>
+        </div>
 
-                <td>
-                  <input
-                    value={p.qty}
-                    onChange={(e) => {
-                      const copy = [...products];
-                      copy[i].qty = e.target.value;
-                      setProducts(copy);
-                    }}
-                  />
-                </td>
+        {/* 3 */}
+        <div className={styles.checkRow}>
+          <div className={styles.left}>
+            3) У клітинці D2 правильно вказана формула
+          </div>
+          <div className={styles.rightColumn}>
+            <label>
+              так
+              <input
+                type="checkbox"
+                checked={formulaD2Correct}
+                onChange={(e) => {
+                  setFormulaD2Correct(e.target.checked);
+                  setFormulaD2Wrong(false);
+                }}
+              />
+              {formulaD2Correct && <span className={styles.score}>2</span>}
+            </label>
 
-                <td>
-                  <input
-                    // placeholder={`=B${i + 3}*C${i + 3}`}
-                    value={p.formula}
-                    onChange={(e) => {
-                      const copy = [...products];
-                      copy[i].formula = e.target.value;
-                      setProducts(copy);
-                    }}
-                    onBlur={() => checkProductFormula(i)}
-                  />
-                </td>
+            <label>
+              ні
+              <input
+                type="checkbox"
+                checked={formulaD2Wrong}
+                onChange={(e) => {
+                  setFormulaD2Wrong(e.target.checked);
+                  setFormulaD2Correct(false);
+                }}
+              />
+              {formulaD2Wrong && <span className={styles.score}>1</span>}
+            </label>
+          </div>
+        </div>
 
-                <td>{p.correct && "вірно"}</td>
-              </tr>
-            ))}
+        {/* 4 */}
+        <div className={styles.checkRow}>
+          <div className={styles.left}>4) Є формули вартості інших товарів</div>
+          <div className={styles.right}>
+            <input
+              type="checkbox"
+              checked={otherFormulas}
+              onChange={(e) => setOtherFormulas(e.target.checked)}
+            />
+            {otherFormulas && <span className={styles.score}>2</span>}
+          </div>
+        </div>
 
-            {/* ===== Row 8 ===== */}
-            <tr>
-              <th>8</th>
-              <td colSpan={3}>Загальна вартість покупки:</td>
-              <td>
-                <input
-                  // placeholder="=D3+D4"
-                  value={totalFormula}
-                  onChange={(e) => setTotalFormula(e.target.value)}
-                  onBlur={checkTotalFormula}
-                />
-              </td>
-              <td>{totalCorrect && "вірно"}</td>
-            </tr>
-          </tbody>
-        </table>
+        {/* 5 */}
+        <div className={styles.checkRow}>
+          <div className={styles.left}>
+            5) Формула сумарної вартості в клітинці D13
+          </div>
+          <div className={styles.right}>
+            <input
+              type="checkbox"
+              checked={!!totalFormulaText}
+              onChange={(e) =>
+                setTotalFormulaText(e.target.checked ? "true" : "")
+              }
+            />
+            {totalFormulaText && <span className={styles.score}>2</span>}
+          </div>
+        </div>
+
+        <div className={styles.sum}>Оцінка блоку: {tableScore}</div>
       </div>
-
-      <div className={styles.sum}>Оцінка блоку: {tableScore}</div>
     </div>
   );
 }

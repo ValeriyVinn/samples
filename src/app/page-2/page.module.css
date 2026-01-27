@@ -33,7 +33,7 @@
   position: fixed;
   top: 12px;
   right: 12px;
-  background: #111827;
+  background: rgb(6, 74, 221, 0.75);
   color: #fff;
   padding: 10px 14px;
   border-radius: 8px;
@@ -103,24 +103,48 @@
   gap: 10px;
 }
 
-.row {
+.quizRow {
   background: #ffffff;
-  padding: 8px 10px;
+  padding: 10px;
   border-radius: 10px;
-  display: grid;
-  grid-template-columns: 30px 130px 150px 110px 60px;
-  gap: 10px;
-  align-items: center;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-.row > div:first-child {
+.quizRow input {
+  width: 100%;
+}
+
+.quizRow button {
+  align-self: flex-start;
+}
+
+@media screen and (min-width: 768px) {
+  .quizRow {
+    display: grid;
+    grid-template-columns: 30px 130px 150px 110px 60px;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+
+.quizRow > div:first-child {
   font-weight: 600;
 }
 
 /* ===== Inputs ===== */
+.checkRow {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+}
 
-.row input {
+.checkRow input {
   padding: 6px 8px;
   border-radius: 6px;
   border: 1px solid #cbd5e1;
@@ -128,19 +152,19 @@
   font-size: 0.95rem;
 }
 
-.row input:focus {
+.checkRow input:focus {
   outline: none;
   border-color: #2563eb;
 }
 
-.row input:disabled {
+.checkRow input:disabled {
   opacity: 0.85;
   cursor: not-allowed;
 }
 
 /* ===== Buttons ===== */
 
-.row button {
+.checkRow button {
   padding: 6px 10px;
   border-radius: 6px;
   border: none;
@@ -151,7 +175,7 @@
   transition: background 0.2s ease;
 }
 
-.row button:hover {
+.checkRow button:hover {
   background: #1e40af;
 }
 
@@ -187,44 +211,85 @@
 /* ===== Slider ===== */
 
 .slider {
+  position: relative;
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 14px;
+  align-items: center;
 }
 
+
 .slider button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+
   width: 42px;
   height: 42px;
   border-radius: 50%;
   border: none;
-  background: #111827;
-  color: #ffffff;
+
+    background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+   color: rgba(0, 0, 0, 0.65);
   font-size: 1.4rem;
+  font-weight: 600;
+
   cursor: pointer;
-  transition: background 0.2s ease;
+  opacity: 0.9;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.slider button:hover {
-  background: #374151;
+
+.slider button:first-child {
+  left: 8px;
 }
+
+.slider button:last-child {
+  right: 8px;
+}
+
 
 .slideWrapper {
   position: relative;
-  width: 80vw;
-  height: 70vh;
-  max-width: 900px;
-  max-height: 500px;
-  background: #ffffff;
-  border-radius: 14px;
+
+  width: 100%;
+  max-width: 100%;
+
+  aspect-ratio: 4 / 3;   /* 🔥 КЛЮЧОВЕ */
+  min-height: 240px;     /* щоб точно не був малий */
+
   padding: 10px;
+  border-radius: 14px;
+
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
+
+
+
 .slideWrapper img {
   object-fit: contain;
+  border-radius: 10px;
 }
 
+
+@media screen and (min-width: 768px) {
+  .slideWrapper {
+    width: 80vw;
+    height: 70vh;
+
+    max-width: 900px;
+    max-height: 500px;
+  }
+
+  .slideWrapper img {
+    max-height: 100%;
+  }
+}
 
 
 /* ===== Spreadsheet ===== */
@@ -308,4 +373,64 @@
   text-align: center;
   font-weight: 700;
   background: transparent;
+}
+
+.list {
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ОДИН ПУНКТ = ОДИН РЯД */
+.checkRow {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  border-bottom: 1px solid #ddd;
+  padding: 8px 0;
+}
+
+/* ЛІВА ЧАСТИНА */
+.left {
+  flex: 2;
+  font-size: 15px;
+}
+
+/* ПРАВА ЧАСТИНА (один елемент) */
+.right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* ПРАВА ЧАСТИНА (кілька елементів) */
+.rightColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+/* ПІДПУНКТИ */
+.sub {
+  margin-left: 16px;
+  font-size: 14px;
+}
+
+/* БАЛ */
+.score {
+  font-weight: bold;
+  margin-left: 6px;
+}
+
+/* ПІДСУМОК */
+.sum {
+  margin-top: 20px;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: right;
 }
